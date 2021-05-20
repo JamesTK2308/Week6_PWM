@@ -53,8 +53,14 @@ UART_HandleTypeDef huart2;
 uint8_t ADCUpdateFlag = 0;
 uint16_t ADCFeedBack = 0;
 
-uint16_t PWMOut = 3000;
-
+uint16_t PWMOut = 10000;
+float V=0;
+float R=0;
+float Vin=0;
+float Error=0;
+float K=1;
+float Proportional=0;
+uint16_t setpoint=1;
 uint64_t _micro = 0;
 uint64_t TimeOutputLoop = 0;
 /* USER CODE END PV */
@@ -130,7 +136,7 @@ int main(void) {
 		if (micros() - TimeOutputLoop > 1000) {
 			TimeOutputLoop = micros();
 			// #001
-
+			PControl();
 			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, PWMOut);
 
 		}
@@ -443,6 +449,14 @@ static void MX_GPIO_Init(void) {
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 	ADCFeedBack = HAL_ADC_GetValue(&hadc1);
 	ADCUpdateFlag = 1;
+	V=(ADCFeedBack*3.3)/4096;
+
+}
+void PControl()
+{
+	Error=setpoint-V;
+	Proportional=Error;
+	PWMOut=PWMOut+(K*Error);
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (htim == &htim11) {
